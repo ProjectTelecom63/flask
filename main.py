@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify, render_template_string
 from datetime import datetime
 import mysql.connector
+import pytz
 
 app = Flask(__name__)
 
@@ -23,7 +24,6 @@ db_config = {
     "auth_plugin": "mysql_native_password",
 }
 
-
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -31,46 +31,52 @@ def home():
 
 @app.route("/data", methods=["GET"]) #http://192.168.1.3:5000/insert_data?nodename=Node1&temperature=25.5&humidity=60.0&latitude=37.123456&longitude=-122.987654
 def insert_data():
-    try:
-        connection = mysql.connector.connect(**db_config)
-        if connection.is_connected():
-            print("Connected to the MySQL database")
+    now = datetime.now(pytz.timezone('Asia/Bangkok'))
+    time = now.strftime("%Y-%m-%d %H:%M:%S")
+    nodename = request.args.get("nodename")
+    temperature = request.args.get("temperature")
+    humidity = request.args.get("humidity")
+    latitude = request.args.get("latitude")
+    longitude = request.args.get("longitude")
 
-            # Get data from the query parameters
-            now = datetime.now()
-            time = now.strftime("%Y-%m-%d %H:%M:%S")
-            nodename = request.args.get("nodename")
-            temperature = float(request.args.get("temperature"))
-            humidity = float(request.args.get("humidity"))
-            latitude = request.args.get("latitude")
-            longitude = request.args.get("longitude")
+    if nodename is not None and temperature is not None and humidity is not None:
+        nodename = request.args.get("nodename")
+        temperature = float(request.args.get("temperature"))
+        humidity = float(request.args.get("humidity"))
+        latitude = request.args.get("latitude")
+        longitude = request.args.get("longitude")
+        try:
+            connection = mysql.connector.connect(**db_config)
+            if connection.is_connected():
+                print("Connected to the MySQL database")
 
-            data_to_insert = {
-                "Time": time,
-                "Nodename": nodename,
-                "Temperature": temperature,
-                "Humidity": humidity,
-                "Latitude": latitude,
-                "Longitude": longitude,
-            }
+                data_to_insert = {
+                    "Time": time,
+                    "Nodename": nodename,
+                    "Temperature": temperature,
+                    "Humidity": humidity,
+                    "Latitude": latitude,
+                    "Longitude": longitude,
+                }
 
-            cursor = connection.cursor()
+                cursor = connection.cursor()
 
-            query = """
-            INSERT INTO Data (Time, Nodename, Temperature, Humidity, Latitude, Longitude)
-            VALUES (%(Time)s, %(Nodename)s, %(Temperature)s, %(Humidity)s, %(Latitude)s, %(Longitude)s)
-            """
+                query = """
+                INSERT INTO Data (Time, Nodename, Temperature, Humidity, Latitude, Longitude)
+                VALUES (%(Time)s, %(Nodename)s, %(Temperature)s, %(Humidity)s, %(Latitude)s, %(Longitude)s)
+                """
 
-            cursor.execute(query, data_to_insert)
-            connection.commit()
+                cursor.execute(query, data_to_insert)
+                connection.commit()
 
-            print("Data inserted successfully")
-    finally:
-        if "connection" in locals() and connection.is_connected():
-            connection.close()
-            print("Connection closed")
-            return jsonify({"message": "Data inserted successfully"})
-
+                print("Data inserted successfully")
+        finally:
+            if "connection" in locals() and connection.is_connected():
+                connection.close()
+                print("Connection closed")
+                return "Data inserted successfully"
+    else:
+        return "Invalid data"
 
 @app.route("/config")
 def index():
@@ -236,6 +242,7 @@ def delete_values():
             print("Connection closed")
 
     return "All values deleted successfully!"
+
 
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0")
