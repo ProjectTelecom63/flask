@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, jsonify, render_template_stri
 from datetime import datetime
 import mysql.connector
 import pytz
+import folium
 
 app = Flask(__name__)
 
@@ -229,6 +230,11 @@ def delete_values():
 
             cursor.execute(query)
             connection.commit()
+            # Reset the auto-increment counter to start from 1
+            reset_auto_increment_query = "ALTER TABLE Data AUTO_INCREMENT = 1"
+            cursor.execute(reset_auto_increment_query)
+            connection.commit()
+            print("Auto-increment counter reset to 1.")
 
             return "All data deleted successfully"
 
@@ -243,6 +249,59 @@ def delete_values():
 
     return "All values deleted successfully!"
 
+@app.route("/plot_locations")
+def plot_locations():
+    try:
+        connection = mysql.connector.connect(**db_config)
+        if connection.is_connected():
+            print("Connected to the MySQL database")
+
+            cursor = connection.cursor(dictionary=True)
+
+            query = """
+            SELECT Latitude, Longitude FROM Data
+            """
+
+            cursor.execute(query)
+            rows = cursor.fetchall()
+            print(rows)
+            import os
+            cwd = os.getcwd()
+            # cwd = os.path.join(cwd,"Server")
+            print(cwd)
+            # Create a Leaflet map
+            map = folium.Map(location=[rows[0]["Latitude"], rows[0]["Longitude"]], zoom_start=20)
+            import shutil
+            # Add markers for each location
+            Latitudels  = []
+            Longitudels = [] 
+            for row in rows:
+                Latitudels.append(row["Latitude"])
+                Longitudels.append(row["Longitude"])
+                folium.Marker([row["Latitude"], row["Longitude"]]).add_to(map)
+            print(Latitudels)
+            print(Longitudels)
+            # Save the map to an HTML file (or you can return it as HTML)
+            map.save("map.html")
+            filehtml = os.path.join(cwd,"map.html")
+            print(filehtml)
+            dir_name = os.path.join(cwd, "templates")
+            existing_file_path = os.path.join(dir_name,"map.html")
+            print(dir_name)
+            if os.path.exists(existing_file_path):
+                os.remove(existing_file_path)
+            shutil.move(filehtml, dir_name)
+
+            return render_template("map.html")
+
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({"error": "An error occurred"}), 500
+
+    finally:
+        if "connection" in locals() and connection.is_connected():
+            connection.close()
+            print("Connection closed")
 
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0")
