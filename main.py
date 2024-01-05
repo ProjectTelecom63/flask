@@ -1,10 +1,12 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import requests
+import json
 
 url = "http://rung.ddns.net:8050"
 app = Flask(__name__)
-CORS(app)  # Enable CORS for the entire app
+CORS(app)
+
 
 @app.route("/api/show", methods=["GET"])
 def api_show():
@@ -66,6 +68,27 @@ def activate():
         response.raise_for_status()
 
         return response.text
+    except requests.exceptions.RequestException as e:
+        print(f"Error making the request: {e}")
+        return jsonify({"error": "Failed to get API response"}), 500
+
+
+@app.route("/api/date", methods=["POST"])
+def fetch_data():
+    try:
+        urldate = url + "/api/date"
+        start = request.json.get("start")
+        end = request.json.get("end")
+        print(f"Received POST data - Start Datetime: {start}, End Datetime: {end}")
+        payload = {"start": start, "end": end}
+
+        headers = {"Content-Type": "application/json"}
+
+        response = requests.post(urldate, json=payload, headers=headers)
+
+        data = response.json()
+        return jsonify(data)
+
     except requests.exceptions.RequestException as e:
         print(f"Error making the request: {e}")
         return jsonify({"error": "Failed to get API response"}), 500
