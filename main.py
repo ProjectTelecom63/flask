@@ -172,5 +172,39 @@ def insert_email():
         return jsonify({"error": "Failed to get API response"}), 500
 
 
+@app.route("/api/deleteemail", methods=["POST"])
+def delete_email():
+    urldel = url + "/api/deleteemail"
+    try:
+        email = request.json.get("email")
+        payload = {"email": email}
+        print(payload)
+        headers = {"Content-Type": "application/json"}
+
+        response = requests.post(urldel, json=payload, headers=headers)
+
+        data = response.json()
+        return jsonify(data)
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error making the request: {e}")
+        return jsonify({"error": "Failed to get API response"}), 500
+
+@app.route("/api/emails", methods=["GET"])
+def get_emails():
+    try:
+        urlget = url + "/api/emails"
+        response = requests.get(urlget)
+        response.raise_for_status()  # Check for errors in the response
+
+        # Assuming the response is in JSON format
+        data = response.json()
+
+        return jsonify(data)
+    except requests.exceptions.RequestException as e:
+        print(f"Error making the request: {e}")
+        return jsonify({"error": "Failed to get API response"}), 500
+
+
 if __name__ == "__main__":
     app.run(debug=True)
