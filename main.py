@@ -152,7 +152,7 @@ def insert_email():
     try:
         data = request.json
         print(data)
-        urlcon = url + "/api/alert/addemail"
+        urlcon = url + "/api/addemail"
         print(urlcon)
         email = request.json.get("email", None)
         delay = request.json.get("delay", None)
