@@ -5,7 +5,7 @@ import json
 
 url = "http://rung.ddns.net:8050"
 app = Flask(__name__)
-CORS(app)  # Enable CORS for the entire app
+CORS(app)
 
 
 @app.route("/api/show", methods=["GET"])
@@ -14,9 +14,8 @@ def api_show():
 
     try:
         response = requests.get(urlshow)
-        response.raise_for_status()  # Check for errors in the response
+        response.raise_for_status()
 
-        # Assuming the response is in JSON format
         data = response.json()
 
         return jsonify(data)
@@ -31,9 +30,8 @@ def api_node():
 
     try:
         response = requests.get(urlnode)
-        response.raise_for_status()  # Check for errors in the response
+        response.raise_for_status()
 
-        # Assuming the response is in JSON format
         data = response.json()
 
         return jsonify(data)
@@ -48,9 +46,8 @@ def api_today():
 
     try:
         response = requests.get(urlnode)
-        response.raise_for_status()  # Check for errors in the response
+        response.raise_for_status()
 
-        # Assuming the response is in JSON format
         data = response.json()
 
         return jsonify(data)
@@ -136,9 +133,8 @@ def con():
     try:
         urlcon = url + "/api/alert/con"
         response = requests.get(urlcon)
-        response.raise_for_status()  # Check for errors in the response
+        response.raise_for_status()
 
-        # Assuming the response is in JSON format
         data = response.json()
 
         return jsonify(data)
@@ -190,14 +186,66 @@ def delete_email():
         print(f"Error making the request: {e}")
         return jsonify({"error": "Failed to get API response"}), 500
 
+
 @app.route("/api/emails", methods=["GET"])
 def get_emails():
     try:
         urlget = url + "/api/emails"
         response = requests.get(urlget)
-        response.raise_for_status()  # Check for errors in the response
+        response.raise_for_status()
 
-        # Assuming the response is in JSON format
+        data = response.json()
+
+        return jsonify(data)
+    except requests.exceptions.RequestException as e:
+        print(f"Error making the request: {e}")
+        return jsonify({"error": "Failed to get API response"}), 500
+
+
+@app.route("/api/sendconfig", methods=["POST"])
+def sendconfig():
+    urldel = url + "/api/sendconfig"
+    try:
+        payload = {
+            "syncword": int(request.json.get("syncword")),
+            "txPower": request.json.get("txPower"),
+            "freq": request.json.get("freq"),
+            "interval": request.json.get("interval"),
+        }
+        print(payload)
+        headers = {"Content-Type": "application/json"}
+
+        requests.post(urldel, json=payload, headers=headers)
+
+        return payload
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error making the request: {e}")
+        return jsonify({"error": "Failed to get API response"}), 500
+
+
+@app.route("/api/latest", methods=["GET"])
+def latest():
+    try:
+        urllatest = url + "/api/latest"
+        response = requests.get(urllatest)
+        response.raise_for_status()
+
+        data = response.json()
+
+        return jsonify(data)
+    except requests.exceptions.RequestException as e:
+        print(f"Error making the request: {e}")
+        return jsonify({"error": "Failed to get API response"}), 500
+
+
+@app.route("/api/showconfig", methods=["GET"])
+def showconfig():
+    try:
+        urlshowcon = url + "/api/showconfig"
+        response = requests.get(urlshowcon)
+        response.raise_for_status()
+
         data = response.json()
 
         return jsonify(data)
