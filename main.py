@@ -11,9 +11,10 @@ CORS(app)
 @app.route("/api/show", methods=["GET"])
 def api_show():
     urlshow = url + "/api/show"
-
+    user = request.args.get('user')
+    
     try:
-        response = requests.get(urlshow)
+        response = requests.get(urlshow,params={'user': user})
         response.raise_for_status()
 
         data = response.json()
@@ -27,9 +28,10 @@ def api_show():
 @app.route("/api/node", methods=["GET"])
 def api_node():
     urlnode = url + "/api/node"
-
+    user = request.args.get('user')
+    
     try:
-        response = requests.get(urlnode)
+        response = requests.get(urlnode,params={'user': user})
         response.raise_for_status()
 
         data = response.json()
@@ -42,10 +44,11 @@ def api_node():
 
 @app.route("/api/show/today", methods=["GET"])
 def api_today():
-    urlnode = url + "/api/show/today"
+    urlapitoday = url + "/api/show/today"
 
+    user = request.args.get('user')
     try:
-        response = requests.get(urlnode)
+        response = requests.get(urlapitoday,params={'user': user})
         response.raise_for_status()
 
         data = response.json()
@@ -58,10 +61,11 @@ def api_today():
 
 @app.route("/api/activate", methods=["GET"])
 def activate():
+    user = request.args.get('user')
     try:
         nodename = request.args.get("nodename")
         urlact = url + "/api/activate?nodename=" + nodename
-        response = requests.get(urlact)
+        response = requests.get(urlact,params={'user': user})
         response.raise_for_status()
 
         return response.text
@@ -74,10 +78,11 @@ def activate():
 def fetch_data():
     try:
         urldate = url + "/api/date"
+        user = request.json.get("user")
         start = request.json.get("start")
         end = request.json.get("end")
         print(f"Received POST data - Start Datetime: {start}, End Datetime: {end}")
-        payload = {"start": start, "end": end}
+        payload = {"start": start, "end": end,"user":user}
 
         headers = {"Content-Type": "application/json"}
 
@@ -95,6 +100,7 @@ def fetch_data():
 def change_con():
     try:
         data = request.json
+        user = request.json.get("user")
         print(data)
         urlcon = url + "/api/alert/changecon"
         print(urlcon)
@@ -115,6 +121,7 @@ def change_con():
             "Radius": radius,
             "NBattery": nbat,
             "GBattery": gbat,
+            "user":user
         }
         print(payload)
         headers = {"Content-Type": "application/json"}
@@ -130,9 +137,10 @@ def change_con():
 
 @app.route("/api/alert/con", methods=["GET"])
 def con():
+    user = request.args.get('user')
     try:
         urlcon = url + "/api/alert/con"
-        response = requests.get(urlcon)
+        response = requests.get(urlcon,params={'user': user})
         response.raise_for_status()
 
         data = response.json()
@@ -150,11 +158,13 @@ def insert_email():
         print(data)
         urlcon = url + "/api/addemail"
         print(urlcon)
+        user = request.json.get("user", None)
         email = request.json.get("email", None)
         delay = request.json.get("delay", None)
         payload = {
             "email": email,
             "delay": delay,
+            "user":user
         }
         print(payload)
         headers = {"Content-Type": "application/json"}
@@ -172,8 +182,9 @@ def insert_email():
 def delete_email():
     urldel = url + "/api/deleteemail"
     try:
+        user = request.json.get("user")
         email = request.json.get("email")
-        payload = {"email": email}
+        payload = {"email": email,"user":user}
         print(payload)
         headers = {"Content-Type": "application/json"}
 
@@ -189,9 +200,10 @@ def delete_email():
 
 @app.route("/api/emails", methods=["GET"])
 def get_emails():
+    user = request.args.get('user')
     try:
         urlget = url + "/api/emails"
-        response = requests.get(urlget)
+        response = requests.get(urlget,params={'user': user})
         response.raise_for_status()
 
         data = response.json()
@@ -211,6 +223,7 @@ def sendconfig():
             "txPower": request.json.get("txPower"),
             "freq": request.json.get("freq"),
             "interval": request.json.get("interval"),
+            "user": request.json.get("user"),
         }
         print(payload)
         headers = {"Content-Type": "application/json"}
@@ -226,9 +239,10 @@ def sendconfig():
 
 @app.route("/api/latest", methods=["GET"])
 def latest():
+    user = request.args.get('user')
     try:
         urllatest = url + "/api/latest"
-        response = requests.get(urllatest)
+        response = requests.get(urllatest,params={'user': user})
         response.raise_for_status()
 
         data = response.json()
@@ -241,9 +255,61 @@ def latest():
 
 @app.route("/api/showconfig", methods=["GET"])
 def showconfig():
+    user = request.args.get('user')
     try:
         urlshowcon = url + "/api/showconfig"
-        response = requests.get(urlshowcon)
+        response = requests.get(urlshowcon,params={'user': user})
+        response.raise_for_status()
+
+        data = response.json()
+
+        return jsonify(data)
+    except requests.exceptions.RequestException as e:
+        print(f"Error making the request: {e}")
+        return jsonify({"error": "Failed to get API response"}), 500
+    
+@app.route('/add_user', methods=['GET'])
+def add_user():
+    username = request.args.get('username')
+    password = request.args.get('password')
+    table = request.args.get('table')
+    try:
+        add_user = url + "/add_user"
+        response = requests.get(add_user,params={'username': username,"password":password,"table":table})
+        response.raise_for_status()
+
+        data = response.json()
+
+        return jsonify(data)
+    except requests.exceptions.RequestException as e:
+        print(f"Error making the request: {e}")
+        return jsonify({"error": "Failed to get API response"}), 500
+
+
+@app.route("/login", methods=["POST"])
+def login():
+    login = url + "/login"
+    try:
+        payload = {
+            "username": request.json.get("username"),
+            "password": request.json.get("password"),
+        }
+        print(payload)
+        headers = {"Content-Type": "application/json"}
+
+        requests.post(login, json=payload, headers=headers)
+
+        return payload
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error making the request: {e}")
+        return jsonify({"error": "Failed to get API response"}), 500
+
+@app.route('/api/user', methods=['GET'])
+def user():
+    try:
+        userr = url + "/add_user"
+        response = requests.get(userr)
         response.raise_for_status()
 
         data = response.json()
@@ -255,4 +321,4 @@ def showconfig():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0", port=5000)
