@@ -7,6 +7,7 @@ url = "http://rung.ddns.net:8050"
 app = Flask(__name__)
 CORS(app)
 
+
 @app.route("/api/show", methods=["GET"])
 def api_show():
     urlshow = url + "/api/show"
@@ -296,9 +297,10 @@ def login():
         print(payload)
         headers = {"Content-Type": "application/json"}
 
-        requests.post(login, json=payload, headers=headers)
+        data=requests.post(login, json=payload, headers=headers)
+        response_data = data.json()
 
-        return payload
+        return response_data
 
     except requests.exceptions.RequestException as e:
         print(f"Error making the request: {e}")
