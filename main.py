@@ -309,13 +309,16 @@ def login():
 @app.route('/api/user', methods=['GET'])
 def user():
     try:
-        userr = url + "/add_user"
+        userr = url + "/api/user"
         response = requests.get(userr)
         response.raise_for_status()
 
         data = response.json()
 
-        return jsonify(data)
+        response_data = data.json()
+
+        return response_data
+    
     except requests.exceptions.RequestException as e:
         print(f"Error making the request: {e}")
         return jsonify({"error": "Failed to get API response"}), 500
