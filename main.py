@@ -5,8 +5,7 @@ import json
 
 url = "http://rung.ddns.net:8050"
 app = Flask(__name__)
-CORS(app)
-
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 @app.route("/api/show", methods=["GET"])
 def api_show():
