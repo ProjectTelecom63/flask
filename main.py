@@ -315,7 +315,7 @@ def user():
 
         data = response.json()
 
-        response_data = data.json()
+        print(jsonify(data))
 
         return jsonify(data)
     
