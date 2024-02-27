@@ -317,7 +317,7 @@ def user():
 
         response_data = data.json()
 
-        return response_data
+        return jsonify(data)
     
     except requests.exceptions.RequestException as e:
         print(f"Error making the request: {e}")
