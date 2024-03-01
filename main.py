@@ -288,7 +288,7 @@ def add_user():
 
 @app.route("/login", methods=["POST"])
 def login():
-    login = url + "/login"
+    login_url = url + "/login"  # Assuming 'url' is defined somewhere
     try:
         payload = {
             "username": request.json.get("username"),
@@ -297,14 +297,17 @@ def login():
         print(payload)
         headers = {"Content-Type": "application/json"}
 
-        data=requests.post(login, json=payload, headers=headers)
-        response_data = data.json()
+        response = requests.post(login_url, json=payload, headers=headers)
 
-        return response_data
-
+        if response.status_code == 200:
+            return jsonify(response.json()), 200
+        else:  # Specify the condition for the elif statement
+            return jsonify(response.json()), 404
+        
     except requests.exceptions.RequestException as e:
         print(f"Error making the request: {e}")
         return jsonify({"error": "Failed to get API response"}), 500
+
 
 @app.route('/api/user', methods=['GET'])
 def user():
